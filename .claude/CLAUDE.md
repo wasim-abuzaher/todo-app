@@ -58,6 +58,10 @@ A collaborative todo application with rich features (priority, due dates, tags, 
 - **Supabase mock:** Global mock in setup.ts; per-test chain mocks via `mockFrom.mockReturnValue()`
 - **Run after each feature:** Always add tests for new hooks and interactive components
 
+## Database Migrations — IMPORTANT
+
+**NEVER run `npm run db:push`, `npx supabase db push`, or any Supabase CLI command that modifies the remote database without explicit user permission.** Always ask the user to run migration commands themselves. You may create or edit migration SQL files, but pushing them to the live database is a destructive action that requires human approval.
+
 ## Database
 
 - 7 tables: `todo_lists`, `todos`, `subtasks`, `tags`, `todo_tags`, `list_shares`, `share_invites`
