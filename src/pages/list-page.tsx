@@ -2,8 +2,6 @@ import { useState, useMemo } from "react";
 import { useParams, Navigate } from "react-router";
 import { useTodos } from "@/hooks/use-todos";
 import { useTodoLists } from "@/hooks/use-todo-lists";
-import { useSubtasks } from "@/hooks/use-subtasks";
-import { useTodoTags } from "@/hooks/use-tags";
 import { useFilters, applyFilters, applySorting } from "@/hooks/use-filters";
 import { TodoForm } from "@/components/todos/todo-form";
 import { DraggableTodoList } from "@/components/todos/draggable-todo-list";
@@ -27,6 +25,7 @@ export default function ListPage() {
   // Batch fetch tags and subtask counts for all todos
   const todoIds = todos?.map((t) => t.id) ?? [];
 
+  // Reuse the same query key + shape as useTodoTags so caches are shared
   const tagQueries = useQueries({
     queries: todoIds.map((todoId) => ({
       queryKey: ["todo-tags", todoId],
@@ -36,12 +35,13 @@ export default function ListPage() {
           .select("tag_id, tags(*)")
           .eq("todo_id", todoId);
         if (error) throw error;
-        return { todoId, tags: data.map((r) => r.tags!) as Tag[] };
+        return data.map((r) => r.tags!) as Tag[];
       },
       enabled: !!todoId,
     })),
   });
 
+  // Reuse the same query key + shape as useSubtasks
   const subtaskQueries = useQueries({
     queries: todoIds.map((todoId) => ({
       queryKey: ["subtasks", todoId],
@@ -53,7 +53,7 @@ export default function ListPage() {
           .order("position")
           .order("created_at");
         if (error) throw error;
-        return { todoId, subtasks: data };
+        return data;
       },
       enabled: !!todoId,
     })),
@@ -61,11 +61,12 @@ export default function ListPage() {
 
   const todoTags = useMemo(() => {
     const map: Record<string, Tag[]> = {};
-    for (const q of tagQueries) {
-      if (q.data) map[q.data.todoId] = q.data.tags;
-    }
+    todoIds.forEach((todoId, i) => {
+      const tags = tagQueries[i]?.data;
+      if (tags) map[todoId] = tags;
+    });
     return map;
-  }, [tagQueries]);
+  }, [tagQueries, todoIds]);
 
   const todoTagIds = useMemo(() => {
     const map: Record<string, string[]> = {};
@@ -77,17 +78,17 @@ export default function ListPage() {
 
   const subtaskCounts = useMemo(() => {
     const map: Record<string, { done: number; total: number }> = {};
-    for (const q of subtaskQueries) {
-      if (q.data) {
-        const { todoId, subtasks } = q.data;
+    todoIds.forEach((todoId, i) => {
+      const subtasks = subtaskQueries[i]?.data;
+      if (subtasks) {
         map[todoId] = {
           total: subtasks.length,
           done: subtasks.filter((s) => s.completed).length,
         };
       }
-    }
+    });
     return map;
-  }, [subtaskQueries]);
+  }, [subtaskQueries, todoIds]);
 
   // Apply client-side filters and sorting
   const filteredTodos = useMemo(() => {
