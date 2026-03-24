@@ -11,6 +11,10 @@ A collaborative todo application with rich features (priority, due dates, tags, 
 - `npm run dev` — Start Vite dev server (http://localhost:5173)
 - `npm run build` — Production build to `dist/`
 - `npm run preview` — Preview production build locally
+- `npm test` — Run all tests (Vitest)
+- `npm run test:watch` — Run tests in watch mode
+- `npx vitest run src/path/to/file.test.tsx` — Run a single test file
+- `npm run db:push` — Push SQL migrations to Supabase (requires `npx supabase link` first)
 
 ## Tech Stack
 
@@ -44,6 +48,19 @@ A collaborative todo application with rich features (priority, due dates, tags, 
 - Config in `components.json` with `resolvedPaths` pointing to `src/`
 - Add new components: `npx shadcn@latest add <component> --yes`
 - Uses `cn()` helper from `src/lib/utils.ts` for class merging
+
+## Testing
+
+- **Framework:** Vitest + jsdom + React Testing Library
+- **Setup file:** `src/test/setup.ts` — global cleanup, Supabase mock
+- **Test utils:** `src/test/test-utils.tsx` — `renderWithProviders()` wraps QueryClient + MemoryRouter
+- **Convention:** Tests live in `__tests__/` directories next to the code they test
+- **Supabase mock:** Global mock in setup.ts; per-test chain mocks via `mockFrom.mockReturnValue()`
+- **Run after each feature:** Always add tests for new hooks and interactive components
+
+## Database Migrations — IMPORTANT
+
+**NEVER run `npm run db:push`, `npx supabase db push`, or any Supabase CLI command that modifies the remote database without explicit user permission.** Always ask the user to run migration commands themselves. You may create or edit migration SQL files, but pushing them to the live database is a destructive action that requires human approval.
 
 ## Database
 

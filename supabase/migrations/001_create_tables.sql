@@ -3,7 +3,7 @@
 -- ============================================
 
 -- Todo lists
-CREATE TABLE todo_lists (
+CREATE TABLE IF NOT EXISTS todo_lists (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id    UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name        TEXT NOT NULL,
@@ -13,10 +13,10 @@ CREATE TABLE todo_lists (
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_todo_lists_owner ON todo_lists(owner_id);
+CREATE INDEX IF NOT EXISTS idx_todo_lists_owner ON todo_lists(owner_id);
 
 -- Todos
-CREATE TABLE todos (
+CREATE TABLE IF NOT EXISTS todos (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   list_id      UUID NOT NULL REFERENCES todo_lists(id) ON DELETE CASCADE,
   created_by   UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -31,20 +31,27 @@ CREATE TABLE todos (
   updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Full-text search column
-ALTER TABLE todos ADD COLUMN fts tsvector
-  GENERATED ALWAYS AS (
-    to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
-  ) STORED;
+-- Full-text search column (only add if not exists)
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'todos' AND column_name = 'fts'
+  ) THEN
+    ALTER TABLE todos ADD COLUMN fts tsvector
+      GENERATED ALWAYS AS (
+        to_tsvector('english', coalesce(title, '') || ' ' || coalesce(description, ''))
+      ) STORED;
+  END IF;
+END $$;
 
-CREATE INDEX idx_todos_list ON todos(list_id);
-CREATE INDEX idx_todos_created_by ON todos(created_by);
-CREATE INDEX idx_todos_due_date ON todos(due_date);
-CREATE INDEX idx_todos_priority ON todos(priority);
-CREATE INDEX idx_todos_fts ON todos USING GIN(fts);
+CREATE INDEX IF NOT EXISTS idx_todos_list ON todos(list_id);
+CREATE INDEX IF NOT EXISTS idx_todos_created_by ON todos(created_by);
+CREATE INDEX IF NOT EXISTS idx_todos_due_date ON todos(due_date);
+CREATE INDEX IF NOT EXISTS idx_todos_priority ON todos(priority);
+CREATE INDEX IF NOT EXISTS idx_todos_fts ON todos USING GIN(fts);
 
 -- Subtasks
-CREATE TABLE subtasks (
+CREATE TABLE IF NOT EXISTS subtasks (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   todo_id    UUID NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
   title      TEXT NOT NULL,
@@ -53,10 +60,10 @@ CREATE TABLE subtasks (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_subtasks_todo ON subtasks(todo_id);
+CREATE INDEX IF NOT EXISTS idx_subtasks_todo ON subtasks(todo_id);
 
 -- Tags (scoped per user)
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id   UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   name       TEXT NOT NULL,
@@ -65,19 +72,19 @@ CREATE TABLE tags (
   UNIQUE(owner_id, name)
 );
 
-CREATE INDEX idx_tags_owner ON tags(owner_id);
+CREATE INDEX IF NOT EXISTS idx_tags_owner ON tags(owner_id);
 
 -- Todo-tag join table
-CREATE TABLE todo_tags (
+CREATE TABLE IF NOT EXISTS todo_tags (
   todo_id UUID NOT NULL REFERENCES todos(id) ON DELETE CASCADE,
   tag_id  UUID NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
   PRIMARY KEY (todo_id, tag_id)
 );
 
-CREATE INDEX idx_todo_tags_tag ON todo_tags(tag_id);
+CREATE INDEX IF NOT EXISTS idx_todo_tags_tag ON todo_tags(tag_id);
 
 -- List sharing
-CREATE TABLE list_shares (
+CREATE TABLE IF NOT EXISTS list_shares (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   list_id     UUID NOT NULL REFERENCES todo_lists(id) ON DELETE CASCADE,
   shared_with UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -86,11 +93,11 @@ CREATE TABLE list_shares (
   UNIQUE(list_id, shared_with)
 );
 
-CREATE INDEX idx_list_shares_user ON list_shares(shared_with);
-CREATE INDEX idx_list_shares_list ON list_shares(list_id);
+CREATE INDEX IF NOT EXISTS idx_list_shares_user ON list_shares(shared_with);
+CREATE INDEX IF NOT EXISTS idx_list_shares_list ON list_shares(list_id);
 
 -- Share invites (link-based)
-CREATE TABLE share_invites (
+CREATE TABLE IF NOT EXISTS share_invites (
   id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   list_id    UUID NOT NULL REFERENCES todo_lists(id) ON DELETE CASCADE,
   token      TEXT NOT NULL UNIQUE DEFAULT encode(gen_random_bytes(32), 'hex'),
@@ -100,7 +107,7 @@ CREATE TABLE share_invites (
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_share_invites_token ON share_invites(token);
+CREATE INDEX IF NOT EXISTS idx_share_invites_token ON share_invites(token);
 
 -- Auto-update updated_at trigger
 CREATE OR REPLACE FUNCTION update_updated_at()
@@ -111,8 +118,10 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS set_updated_at ON todo_lists;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON todo_lists
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
+DROP TRIGGER IF EXISTS set_updated_at ON todos;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON todos
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
