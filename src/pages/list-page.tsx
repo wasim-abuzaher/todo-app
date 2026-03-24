@@ -12,7 +12,7 @@ import type { Todo } from "@/types";
 export default function ListPage() {
   const { listId } = useParams<{ listId: string }>();
   const { data: lists, isLoading: listsLoading } = useTodoLists();
-  const { data: todos, isLoading: todosLoading } = useTodos(listId!);
+  const { data: todos, isLoading: todosLoading } = useTodos(listId ?? "");
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
 
   const list = lists?.find((l) => l.id === listId);
@@ -44,7 +44,7 @@ export default function ListPage() {
 
       {/* Add todo */}
       <div className="mb-4">
-        <TodoForm listId={listId!} />
+        <TodoForm listId={listId ?? ""} />
       </div>
 
       {/* Todo list */}

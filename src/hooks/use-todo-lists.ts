@@ -28,11 +28,12 @@ export function useCreateList() {
 
   return useMutation({
     mutationFn: async (values: { name: string; description?: string }) => {
+      if (!user) throw new Error("User must be authenticated");
       const { data, error } = await supabase
         .from("todo_lists")
         .insert({
           ...values,
-          owner_id: user!.id,
+          owner_id: user.id,
         } satisfies TodoListInsert)
         .select()
         .single();

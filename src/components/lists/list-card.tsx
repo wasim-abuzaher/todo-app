@@ -11,7 +11,7 @@ interface ListCardProps {
 export function ListCard({ list, todoCount }: ListCardProps) {
   return (
     <div className="group relative rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50">
-      <Link to={`/lists/${list.id}`} className="absolute inset-0 z-0" />
+      <Link to={`/lists/${list.id}`} className="absolute inset-0 z-0" aria-label={list.name} />
       <div className="relative z-10 flex items-start justify-between">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 rounded-md bg-primary/10 p-2">

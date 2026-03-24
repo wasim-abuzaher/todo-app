@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -19,9 +19,19 @@ interface ListFormProps {
 }
 
 export function ListForm({ open, onOpenChange, list }: ListFormProps) {
-  const [name, setName] = useState(list?.name ?? "");
-  const [description, setDescription] = useState(list?.description ?? "");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
   const createList = useCreateList();
+
+  useEffect(() => {
+    if (list) {
+      setName(list.name);
+      setDescription(list.description ?? "");
+    } else {
+      setName("");
+      setDescription("");
+    }
+  }, [list]);
   const updateList = useUpdateList();
   const isEditing = !!list;
   const isPending = createList.isPending || updateList.isPending;
@@ -35,8 +45,10 @@ export function ListForm({ open, onOpenChange, list }: ListFormProps) {
     } else {
       await createList.mutateAsync({ name: name.trim(), description: description.trim() || undefined });
     }
-    setName("");
-    setDescription("");
+    if (!isEditing) {
+      setName("");
+      setDescription("");
+    }
     onOpenChange(false);
   };
 
