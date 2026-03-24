@@ -5,6 +5,10 @@
 -- and the list_shares SELECT policy queries todo_lists,
 -- causing infinite recursion. Fix by using SECURITY DEFINER
 -- functions that bypass RLS for the cross-table checks.
+--
+-- NOTE: Migration 002 has been updated to include these fixes
+-- for fresh installs. This migration exists for databases that
+-- already ran the original 002.
 -- ============================================
 
 -- Helper: check if user has a share on a list (bypasses RLS on list_shares)
@@ -23,49 +27,48 @@ RETURNS BOOLEAN AS $$
   );
 $$ LANGUAGE sql SECURITY DEFINER STABLE;
 
--- Fix todo_lists SELECT: use SECURITY DEFINER function for list_shares check
-DROP POLICY "select_own_or_shared" ON todo_lists;
+-- Fix todo_lists SELECT
+DROP POLICY IF EXISTS "select_own_or_shared" ON todo_lists;
 CREATE POLICY "select_own_or_shared" ON todo_lists FOR SELECT USING (
   owner_id = auth.uid() OR
   is_shared_with_user(id, auth.uid())
 );
 
--- Fix list_shares SELECT: use SECURITY DEFINER function for todo_lists check
-DROP POLICY "select_own_shares" ON list_shares;
+-- Fix list_shares policies
+DROP POLICY IF EXISTS "select_own_shares" ON list_shares;
 CREATE POLICY "select_own_shares" ON list_shares FOR SELECT USING (
   shared_with = auth.uid() OR
   is_list_owner(list_id, auth.uid())
 );
 
--- Fix list_shares INSERT/UPDATE/DELETE: same issue with inline todo_lists queries
-DROP POLICY "manage_as_owner" ON list_shares;
+DROP POLICY IF EXISTS "manage_as_owner" ON list_shares;
 CREATE POLICY "manage_as_owner" ON list_shares FOR INSERT WITH CHECK (
   is_list_owner(list_id, auth.uid())
 );
 
-DROP POLICY "update_as_owner" ON list_shares;
+DROP POLICY IF EXISTS "update_as_owner" ON list_shares;
 CREATE POLICY "update_as_owner" ON list_shares FOR UPDATE USING (
   is_list_owner(list_id, auth.uid())
 );
 
-DROP POLICY "delete_as_owner_or_self" ON list_shares;
+DROP POLICY IF EXISTS "delete_as_owner_or_self" ON list_shares;
 CREATE POLICY "delete_as_owner_or_self" ON list_shares FOR DELETE USING (
   shared_with = auth.uid() OR
   is_list_owner(list_id, auth.uid())
 );
 
--- Fix share_invites: same pattern, uses inline todo_lists queries
-DROP POLICY "select_own_invites" ON share_invites;
+-- Fix share_invites policies
+DROP POLICY IF EXISTS "select_own_invites" ON share_invites;
 CREATE POLICY "select_own_invites" ON share_invites FOR SELECT USING (
   is_list_owner(list_id, auth.uid())
 );
 
-DROP POLICY "create_as_owner" ON share_invites;
+DROP POLICY IF EXISTS "create_as_owner" ON share_invites;
 CREATE POLICY "create_as_owner" ON share_invites FOR INSERT WITH CHECK (
   is_list_owner(list_id, auth.uid())
 );
 
-DROP POLICY "delete_as_owner" ON share_invites;
+DROP POLICY IF EXISTS "delete_as_owner" ON share_invites;
 CREATE POLICY "delete_as_owner" ON share_invites FOR DELETE USING (
   is_list_owner(list_id, auth.uid())
 );

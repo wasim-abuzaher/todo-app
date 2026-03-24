@@ -14,6 +14,7 @@ A collaborative todo application with rich features (priority, due dates, tags, 
 - `npm test` — Run all tests (Vitest)
 - `npm run test:watch` — Run tests in watch mode
 - `npx vitest run src/path/to/file.test.tsx` — Run a single test file
+- `npm run db:push` — Push SQL migrations to Supabase (requires `npx supabase link` first)
 
 ## Tech Stack
 
