@@ -18,7 +18,7 @@ export function TodoFilters() {
   return (
     <div className="flex flex-wrap items-center gap-2">
       <Select value={status} onValueChange={(v) => setFilter("status", v as StatusFilter)}>
-        <SelectTrigger className="h-8 w-[110px] text-xs">
+        <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -29,7 +29,7 @@ export function TodoFilters() {
       </Select>
 
       <Select value={priority} onValueChange={(v) => setFilter("priority", v as PriorityFilter)}>
-        <SelectTrigger className="h-8 w-[110px] text-xs">
+        <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs">
           <SelectValue placeholder="Priority" />
         </SelectTrigger>
         <SelectContent>
@@ -41,7 +41,7 @@ export function TodoFilters() {
       </Select>
 
       <Select value={due} onValueChange={(v) => setFilter("due", v as DueFilter)}>
-        <SelectTrigger className="h-8 w-[110px] text-xs">
+        <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs">
           <SelectValue placeholder="Due date" />
         </SelectTrigger>
         <SelectContent>
@@ -55,7 +55,7 @@ export function TodoFilters() {
 
       {tags && tags.length > 0 && (
         <Select value={tag} onValueChange={(v) => setFilter("tag", v)}>
-          <SelectTrigger className="h-8 w-[110px] text-xs">
+          <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs">
             <SelectValue placeholder="Tag" />
           </SelectTrigger>
           <SelectContent>
@@ -70,7 +70,7 @@ export function TodoFilters() {
       )}
 
       <Select value={sort} onValueChange={(v) => setFilter("sort", v as SortField)}>
-        <SelectTrigger className="h-8 w-[120px] text-xs">
+        <SelectTrigger className="h-8 w-auto min-w-[100px] text-xs">
           <SelectValue placeholder="Sort" />
         </SelectTrigger>
         <SelectContent>
