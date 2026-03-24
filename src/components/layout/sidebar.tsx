@@ -6,6 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CheckSquare, List, Plus } from "lucide-react";
 import { useState } from "react";
 import { ListForm } from "@/components/lists/list-form";
+import { SearchCommand } from "@/components/search/search-command";
 import { cn } from "@/lib/utils";
 
 export function Sidebar() {
@@ -21,6 +22,11 @@ export function Sidebar() {
         <Link to="/" className="font-semibold">
           Todo App
         </Link>
+      </div>
+
+      {/* Search */}
+      <div className="p-2 pb-0">
+        <SearchCommand />
       </div>
 
       {/* List navigation */}
