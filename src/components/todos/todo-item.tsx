@@ -23,6 +23,7 @@ interface TodoItemProps {
   onEdit: (todo: Todo) => void;
   dragListeners?: SyntheticListenerMap;
   dragAttributes?: Record<string, unknown>;
+  canEdit?: boolean;
 }
 
 export function TodoItem({
@@ -32,6 +33,7 @@ export function TodoItem({
   onEdit,
   dragListeners,
   dragAttributes,
+  canEdit = true,
 }: TodoItemProps) {
   const toggleTodo = useToggleTodo();
   const deleteTodo = useDeleteTodo();
@@ -53,6 +55,7 @@ export function TodoItem({
 
       <Checkbox
         checked={todo.completed}
+        disabled={!canEdit}
         onCheckedChange={(checked) =>
           toggleTodo.mutate({
             id: todo.id,
@@ -106,30 +109,32 @@ export function TodoItem({
         )}
       </div>
 
-      <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon-xs">
-              <MoreHorizontal />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => onEdit(todo)}>
-              <Pencil />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() =>
-                deleteTodo.mutate({ id: todo.id, listId: todo.list_id })
-              }
-              className="text-destructive focus:text-destructive"
-            >
-              <Trash2 />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {canEdit && (
+        <div className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-xs">
+                <MoreHorizontal />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onEdit(todo)}>
+                <Pencil />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() =>
+                  deleteTodo.mutate({ id: todo.id, listId: todo.list_id })
+                }
+                className="text-destructive focus:text-destructive"
+              >
+                <Trash2 />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
     </div>
   );
 }

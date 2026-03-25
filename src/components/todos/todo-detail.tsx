@@ -29,9 +29,10 @@ interface TodoDetailProps {
   todo: Todo | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  canEdit?: boolean;
 }
 
-export function TodoDetail({ todo, open, onOpenChange }: TodoDetailProps) {
+export function TodoDetail({ todo, open, onOpenChange, canEdit = true }: TodoDetailProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<string>("medium");
@@ -72,7 +73,7 @@ export function TodoDetail({ todo, open, onOpenChange }: TodoDetailProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col p-0 overflow-hidden">
         <SheetHeader className="px-6 pt-6 pb-0">
-          <SheetTitle>Edit Todo</SheetTitle>
+          <SheetTitle>{canEdit ? "Edit Todo" : "View Todo"}</SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-6 py-4 space-y-5">
@@ -83,6 +84,7 @@ export function TodoDetail({ todo, open, onOpenChange }: TodoDetailProps) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Todo title"
+              readOnly={!canEdit}
             />
           </div>
 
@@ -94,6 +96,7 @@ export function TodoDetail({ todo, open, onOpenChange }: TodoDetailProps) {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Add a description..."
               className="min-h-20 resize-none"
+              readOnly={!canEdit}
             />
           </div>
 
@@ -137,28 +140,38 @@ export function TodoDetail({ todo, open, onOpenChange }: TodoDetailProps) {
         </div>
 
         <SheetFooter className="flex-row items-center justify-between border-t px-6 py-4">
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={handleDelete}
-            disabled={deleteTodo.isPending}
-          >
-            <Trash2 />
-            Delete
-          </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={updateTodo.isPending || !title.trim()}
-            >
-              {updateTodo.isPending && <Loader2 className="animate-spin" />}
-              Save
-            </Button>
-          </div>
+          {canEdit ? (
+            <>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleDelete}
+                disabled={deleteTodo.isPending}
+              >
+                <Trash2 />
+                Delete
+              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={updateTodo.isPending || !title.trim()}
+                >
+                  {updateTodo.isPending && <Loader2 className="animate-spin" />}
+                  Save
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="ml-auto">
+              <Button variant="outline" size="sm" onClick={() => onOpenChange(false)}>
+                Close
+              </Button>
+            </div>
+          )}
         </SheetFooter>
       </SheetContent>
     </Sheet>

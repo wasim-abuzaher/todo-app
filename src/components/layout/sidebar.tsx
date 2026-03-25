@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router";
 import { useTodoLists } from "@/hooks/use-todo-lists";
+import { useAuth } from "@/providers/auth-provider";
 import { UserMenu } from "@/components/auth/user-menu";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CheckSquare, List, Plus } from "lucide-react";
+import { CheckSquare, List, Plus, Users } from "lucide-react";
 import { useState } from "react";
 import { ListForm } from "@/components/lists/list-form";
 import { SearchCommand } from "@/components/search/search-command";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 
 export function Sidebar() {
   const { data: lists, isLoading } = useTodoLists();
+  const { user } = useAuth();
   const location = useLocation();
   const [showCreate, setShowCreate] = useState(false);
 
@@ -51,6 +53,7 @@ export function Sidebar() {
           ))}
         {lists?.map((list) => {
           const isActive = location.pathname === `/lists/${list.id}`;
+          const isShared = list.owner_id !== user?.id;
           return (
             <Link
               key={list.id}
@@ -61,7 +64,10 @@ export function Sidebar() {
               )}
             >
               <List className="size-4 shrink-0 text-muted-foreground" />
-              <span className="truncate">{list.name}</span>
+              <span className="truncate flex-1">{list.name}</span>
+              {isShared && (
+                <Users className="size-3.5 shrink-0 text-muted-foreground" />
+              )}
             </Link>
           );
         })}

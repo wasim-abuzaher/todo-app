@@ -4,12 +4,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useTodos } from "@/hooks/use-todos";
 import { useTodoLists } from "@/hooks/use-todo-lists";
 import { useFilters, applyFilters, applySorting } from "@/hooks/use-filters";
+import { useListRole } from "@/hooks/use-sharing";
+import { useRealtimeSync } from "@/hooks/use-realtime";
+import { usePresence } from "@/hooks/use-presence";
 import { TodoForm } from "@/components/todos/todo-form";
 import { DraggableTodoList } from "@/components/todos/draggable-todo-list";
 import { TodoDetail } from "@/components/todos/todo-detail";
 import { TodoFilters } from "@/components/todos/todo-filters";
 import { ListActions } from "@/components/lists/list-actions";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { supabase } from "@/lib/supabase";
 import type { Todo, Tag, Subtask } from "@/types";
 
@@ -21,6 +31,10 @@ export default function ListPage() {
   const filters = useFilters();
 
   const list = lists?.find((l) => l.id === listId);
+  const role = useListRole(list);
+  const canEdit = role === "owner" || role === "editor";
+  const onlineUsers = usePresence(listId ?? "");
+  useRealtimeSync(listId ?? "");
 
   const todoIds = useMemo(() => todos?.map((t) => t.id) ?? [], [todos]);
 
@@ -116,7 +130,35 @@ export default function ListPage() {
                 </p>
               )}
             </div>
-            <ListActions list={list} />
+            <div className="flex items-center gap-2">
+              {/* Online presence avatars */}
+              {onlineUsers.length > 0 && (
+                <TooltipProvider>
+                  <div className="flex -space-x-2">
+                    {onlineUsers.slice(0, 3).map((u) => (
+                      <Tooltip key={u.userId}>
+                        <TooltipTrigger asChild>
+                          <Avatar className="size-7 border-2 border-background">
+                            <AvatarFallback className="text-xs">
+                              {(u.email?.[0] ?? "?").toUpperCase()}
+                            </AvatarFallback>
+                          </Avatar>
+                        </TooltipTrigger>
+                        <TooltipContent>{u.email}</TooltipContent>
+                      </Tooltip>
+                    ))}
+                    {onlineUsers.length > 3 && (
+                      <Avatar className="size-7 border-2 border-background">
+                        <AvatarFallback className="text-xs">
+                          +{onlineUsers.length - 3}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                  </div>
+                </TooltipProvider>
+              )}
+              <ListActions list={list} />
+            </div>
           </div>
         )
       )}
@@ -127,9 +169,11 @@ export default function ListPage() {
       </div>
 
       {/* Add todo */}
-      <div className="mb-4">
-        <TodoForm listId={listId ?? ""} />
-      </div>
+      {canEdit && (
+        <div className="mb-4">
+          <TodoForm listId={listId ?? ""} />
+        </div>
+      )}
 
       {/* Todo list */}
       {todosLoading ? (
@@ -145,6 +189,7 @@ export default function ListPage() {
           todoTags={todoTags}
           subtaskCounts={subtaskCounts}
           onEditTodo={setEditingTodo}
+          canEdit={canEdit}
         />
       )}
 
@@ -153,6 +198,7 @@ export default function ListPage() {
         todo={editingTodo}
         open={!!editingTodo}
         onOpenChange={(open) => !open && setEditingTodo(null)}
+        canEdit={canEdit}
       />
     </div>
   );

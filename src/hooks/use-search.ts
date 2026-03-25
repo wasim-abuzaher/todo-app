@@ -1,27 +1,57 @@
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/auth-provider";
 import type { TodoSearchResult } from "@/types";
 
+function useDebouncedValue(value: string, delay: number) {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    // Clear immediately when input is emptied
+    if (!value.trim()) {
+      setDebounced("");
+      return;
+    }
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+
+  return debounced;
+}
+
 export function useSearch(query: string) {
   const { user } = useAuth();
+  const debouncedQuery = useDebouncedValue(query, 250);
 
   return useQuery({
-    queryKey: ["search", query],
+    queryKey: ["search", debouncedQuery],
     queryFn: async (): Promise<TodoSearchResult[]> => {
-      if (!query.trim()) return [];
+      if (!debouncedQuery.trim()) return [];
 
-      // Join terms with & for AND matching via Supabase .textSearch()
-      const tsQuery = query.trim().split(/\s+/).join(" & ");
+      const trimmed = debouncedQuery.trim();
+
+      // Try prefix-matching full-text search first (e.g. "gro" → "gro:*")
+      const tsQuery = trimmed.split(/\s+/).map((t) => `${t}:*`).join(" & ");
       const { data, error } = await supabase
         .from("todos")
         .select("*, todo_lists!inner(name)")
         .textSearch("fts", tsQuery)
         .limit(20);
-      if (error) throw error;
-      return data as TodoSearchResult[];
+
+      if (!error && data && data.length > 0) {
+        return data as TodoSearchResult[];
+      }
+
+      // Fallback to ilike for short/partial queries
+      const { data: fallback, error: fallbackError } = await supabase
+        .from("todos")
+        .select("*, todo_lists!inner(name)")
+        .or(`title.ilike.%${trimmed}%,description.ilike.%${trimmed}%`)
+        .limit(20);
+      if (fallbackError) throw fallbackError;
+      return fallback as TodoSearchResult[];
     },
-    enabled: !!user && query.trim().length > 0,
-    placeholderData: (prev) => prev,
+    enabled: !!user && debouncedQuery.trim().length > 0,
   });
 }

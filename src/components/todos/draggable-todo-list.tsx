@@ -24,6 +24,7 @@ interface DraggableTodoListProps {
   todoTags: Record<string, Tag[]>;
   subtaskCounts: Record<string, { done: number; total: number }>;
   onEditTodo: (todo: Todo) => void;
+  canEdit?: boolean;
 }
 
 function SortableTodoItem({
@@ -31,11 +32,13 @@ function SortableTodoItem({
   tags,
   subtaskCount,
   onEdit,
+  canEdit = true,
 }: {
   todo: Todo;
   tags?: Tag[];
   subtaskCount?: { done: number; total: number };
   onEdit: (todo: Todo) => void;
+  canEdit?: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: todo.id });
@@ -53,8 +56,9 @@ function SortableTodoItem({
         tags={tags}
         subtaskCount={subtaskCount}
         onEdit={onEdit}
-        dragListeners={listeners}
-        dragAttributes={attributes}
+        dragListeners={canEdit ? listeners : undefined}
+        dragAttributes={canEdit ? attributes : undefined}
+        canEdit={canEdit}
       />
     </div>
   );
@@ -66,6 +70,7 @@ export function DraggableTodoList({
   todoTags,
   subtaskCounts,
   onEditTodo,
+  canEdit = true,
 }: DraggableTodoListProps) {
   const reorder = useReorderTodos();
   const sensors = useSensors(
@@ -113,6 +118,7 @@ export function DraggableTodoList({
               tags={todoTags[todo.id]}
               subtaskCount={subtaskCounts[todo.id]}
               onEdit={onEditTodo}
+              canEdit={canEdit}
             />
           ))}
         </div>

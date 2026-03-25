@@ -1,13 +1,20 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import {
-  CommandDialog,
+  Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useSearch } from "@/hooks/use-search";
 import { CheckSquare, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -61,39 +68,47 @@ export function SearchCommand() {
         </kbd>
       </button>
 
-      <CommandDialog open={open} onOpenChange={setOpen}>
-        <CommandInput
-          placeholder="Search todos..."
-          value={query}
-          onValueChange={setQuery}
-        />
-        <CommandList>
-          <CommandEmpty>
-            {query.trim() ? "No results found." : "Type to search..."}
-          </CommandEmpty>
-          {Array.from(grouped.entries()).map(([listId, { listName, todos }]) => (
-            <CommandGroup key={listId} heading={listName}>
-              {todos.map((todo) => (
-                <CommandItem
-                  key={todo.id}
-                  onSelect={() => handleSelect(listId)}
-                  className="gap-2"
-                >
-                  <CheckSquare
-                    className={cn(
-                      "size-4",
-                      todo.completed ? "text-muted-foreground" : "text-primary"
-                    )}
-                  />
-                  <span className={cn(todo.completed && "line-through text-muted-foreground")}>
-                    {todo.title}
-                  </span>
-                </CommandItem>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogHeader className="sr-only">
+          <DialogTitle>Search</DialogTitle>
+          <DialogDescription>Search for todos across all lists</DialogDescription>
+        </DialogHeader>
+        <DialogContent className="overflow-hidden p-0" showCloseButton={false}>
+          <Command shouldFilter={false} className="**:data-[slot=command-input-wrapper]:h-12 [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]]:px-2 [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
+            <CommandInput
+              placeholder="Search todos..."
+              value={query}
+              onValueChange={setQuery}
+            />
+            <CommandList>
+              <CommandEmpty>
+                {query.trim() ? "No results found." : "Type to search..."}
+              </CommandEmpty>
+              {Array.from(grouped.entries()).map(([listId, { listName, todos }]) => (
+                <CommandGroup key={listId} heading={listName}>
+                  {todos.map((todo) => (
+                    <CommandItem
+                      key={todo.id}
+                      onSelect={() => handleSelect(listId)}
+                      className="gap-2"
+                    >
+                      <CheckSquare
+                        className={cn(
+                          "size-4",
+                          todo.completed ? "text-muted-foreground" : "text-primary"
+                        )}
+                      />
+                      <span className={cn(todo.completed && "line-through text-muted-foreground")}>
+                        {todo.title}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
               ))}
-            </CommandGroup>
-          ))}
-        </CommandList>
-      </CommandDialog>
+            </CommandList>
+          </Command>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -17,8 +17,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useDeleteList } from "@/hooks/use-todo-lists";
+import { useAuth } from "@/providers/auth-provider";
 import { ListForm } from "./list-form";
-import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { ShareDialog } from "@/components/sharing/share-dialog";
+import { MoreHorizontal, Pencil, Share2, Trash2 } from "lucide-react";
 import type { TodoList } from "@/types";
 
 interface ListActionsProps {
@@ -28,9 +30,12 @@ interface ListActionsProps {
 export function ListActions({ list }: ListActionsProps) {
   const [showEdit, setShowEdit] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const deleteList = useDeleteList();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const isOwner = user?.id === list.owner_id;
 
   const handleDelete = async () => {
     await deleteList.mutateAsync(list.id);
@@ -39,6 +44,8 @@ export function ListActions({ list }: ListActionsProps) {
       navigate("/");
     }
   };
+
+  if (!isOwner) return null;
 
   return (
     <>
@@ -49,6 +56,10 @@ export function ListActions({ list }: ListActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={() => setShowShare(true)}>
+            <Share2 />
+            Share
+          </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowEdit(true)}>
             <Pencil />
             Rename
@@ -65,6 +76,7 @@ export function ListActions({ list }: ListActionsProps) {
       </DropdownMenu>
 
       <ListForm open={showEdit} onOpenChange={setShowEdit} list={list} />
+      <ShareDialog list={list} open={showShare} onOpenChange={setShowShare} />
 
       <Dialog open={showDelete} onOpenChange={setShowDelete}>
         <DialogContent>
