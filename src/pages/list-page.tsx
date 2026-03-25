@@ -12,7 +12,9 @@ import { DraggableTodoList } from "@/components/todos/draggable-todo-list";
 import { TodoDetail } from "@/components/todos/todo-detail";
 import { TodoFilters } from "@/components/todos/todo-filters";
 import { ListActions } from "@/components/lists/list-actions";
+import { MembersDialog } from "@/components/sharing/members-dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tooltip,
@@ -21,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { supabase } from "@/lib/supabase";
+import { Users } from "lucide-react";
 import type { Todo, Tag, Subtask } from "@/types";
 
 export default function ListPage() {
@@ -28,6 +31,7 @@ export default function ListPage() {
   const { data: lists, isLoading: listsLoading } = useTodoLists();
   const { data: todos, isLoading: todosLoading } = useTodos(listId ?? "");
   const [editingTodo, setEditingTodo] = useState<Todo | null>(null);
+  const [showMembers, setShowMembers] = useState(false);
   const filters = useFilters();
 
   const list = lists?.find((l) => l.id === listId);
@@ -157,6 +161,13 @@ export default function ListPage() {
                   </div>
                 </TooltipProvider>
               )}
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                onClick={() => setShowMembers(true)}
+              >
+                <Users className="size-4" />
+              </Button>
               <ListActions list={list} />
             </div>
           </div>
@@ -200,6 +211,15 @@ export default function ListPage() {
         onOpenChange={(open) => !open && setEditingTodo(null)}
         canEdit={canEdit}
       />
+
+      {/* Members dialog */}
+      {list && (
+        <MembersDialog
+          list={list}
+          open={showMembers}
+          onOpenChange={setShowMembers}
+        />
+      )}
     </div>
   );
 }

@@ -46,6 +46,7 @@ const mockShares = [
     shared_with: "user-2",
     role: "editor",
     created_at: "2026-01-01T00:00:00Z",
+    email: "editor@example.com",
   },
   {
     id: "share-2",
@@ -53,27 +54,26 @@ const mockShares = [
     shared_with: "user-3",
     role: "viewer",
     created_at: "2026-01-02T00:00:00Z",
+    email: "viewer@example.com",
   },
 ];
 
 describe("useListShares", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("fetches shares for a list", async () => {
-    const chain = {
-      select: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      order: vi.fn().mockResolvedValue({ data: mockShares, error: null }),
-    };
-    mockFrom.mockReturnValue(chain);
+  it("fetches shares with emails via RPC", async () => {
+    mockRpc.mockResolvedValue({ data: mockShares, error: null });
 
     const { result } = renderHook(() => useListShares("list-1"), {
       wrapper: createWrapper(),
     });
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(mockFrom).toHaveBeenCalledWith("list_shares");
+    expect(mockRpc).toHaveBeenCalledWith("get_list_collaborators", {
+      p_list_id: "list-1",
+    });
     expect(result.current.data).toHaveLength(2);
+    expect(result.current.data![0].email).toBe("editor@example.com");
   });
 });
 

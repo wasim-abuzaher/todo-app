@@ -21,6 +21,7 @@ export type TodoTag = Tables["todo_tags"]["Row"];
 
 export type ListShare = Tables["list_shares"]["Row"];
 export type ListShareInsert = Tables["list_shares"]["Insert"];
+export type ListShareWithEmail = ListShare & { email: string };
 
 export type ShareInvite = Tables["share_invites"]["Row"];
 

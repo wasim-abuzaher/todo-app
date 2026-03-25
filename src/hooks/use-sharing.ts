@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/providers/auth-provider";
-import type { ListShare, ShareInvite, TodoList } from "@/types";
+import type { ListShareWithEmail, ShareInvite, TodoList } from "@/types";
 import { toast } from "sonner";
 
 // ─── List Shares ────────────────────────────────────────────────────────────
@@ -10,13 +10,11 @@ export function useListShares(listId: string) {
   return useQuery({
     queryKey: ["list-shares", listId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("list_shares")
-        .select("*")
-        .eq("list_id", listId)
-        .order("created_at");
+      const { data, error } = await supabase.rpc("get_list_collaborators", {
+        p_list_id: listId,
+      });
       if (error) throw error;
-      return data as ListShare[];
+      return data as ListShareWithEmail[];
     },
     enabled: !!listId,
   });
@@ -44,6 +42,7 @@ export function useUpdateShareRole() {
     },
     onSuccess: ({ listId }) => {
       queryClient.invalidateQueries({ queryKey: ["list-shares", listId] });
+      queryClient.invalidateQueries({ queryKey: ["list-members", listId] });
       toast.success("Role updated");
     },
     onError: (error) => {
@@ -66,6 +65,7 @@ export function useRemoveCollaborator() {
     },
     onSuccess: ({ listId }) => {
       queryClient.invalidateQueries({ queryKey: ["list-shares", listId] });
+      queryClient.invalidateQueries({ queryKey: ["list-members", listId] });
       toast.success("Collaborator removed");
     },
     onError: (error) => {
@@ -73,6 +73,32 @@ export function useRemoveCollaborator() {
         description: error.message,
       });
     },
+  });
+}
+
+// ─── List Members (owner + collaborators with emails) ───────────────────────
+
+export interface ListMember {
+  user_id: string;
+  email: string;
+  role: "owner" | "editor" | "viewer";
+}
+
+export function useListMembers(listId: string) {
+  return useQuery({
+    queryKey: ["list-members", listId],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_list_members", {
+        p_list_id: listId,
+      });
+      if (error) {
+        console.error("get_list_members error:", error.message, error.code, error.details, error.hint);
+        throw error;
+      }
+      console.log("get_list_members data:", JSON.stringify(data));
+      return data as ListMember[];
+    },
+    enabled: !!listId,
   });
 }
 

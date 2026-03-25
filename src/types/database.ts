@@ -182,7 +182,31 @@ export type Database = {
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      accept_invite: {
+        Args: { p_token: string };
+        Returns: string;
+      };
+      get_list_collaborators: {
+        Args: { p_list_id: string };
+        Returns: {
+          id: string;
+          list_id: string;
+          shared_with: string;
+          role: string;
+          created_at: string;
+          email: string;
+        }[];
+      };
+      get_list_members: {
+        Args: { p_list_id: string };
+        Returns: {
+          user_id: string;
+          email: string;
+          role: string;
+        }[];
+      };
+    };
     Enums: Record<string, never>;
   };
 };

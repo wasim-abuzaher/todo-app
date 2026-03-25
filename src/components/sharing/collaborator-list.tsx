@@ -30,14 +30,14 @@ export function CollaboratorList({ listId }: CollaboratorListProps) {
       <h4 className="text-sm font-medium">Collaborators</h4>
       <div className="space-y-2">
         {shares.map((share) => {
-          const initials = share.shared_with.slice(0, 2).toUpperCase();
+          const initial = (share.email?.[0] ?? "?").toUpperCase();
           return (
             <div key={share.id} className="flex items-center gap-2">
               <Avatar className="size-7">
-                <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                <AvatarFallback className="text-xs">{initial}</AvatarFallback>
               </Avatar>
               <span className="flex-1 text-sm truncate text-muted-foreground">
-                {share.shared_with.slice(0, 8)}...
+                {share.email}
               </span>
               <Select
                 value={share.role}

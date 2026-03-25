@@ -488,6 +488,26 @@ The MVP is complete when a user can sign up, manage rich todos across multiple l
 
 ---
 
+## 11.5 Phase 5: Collaborator Visibility & Access Management
+
+**Goal:** List owners can see who a list is shared with (by email) and revoke access.
+
+### Requirements
+- Share dialog shows collaborator **email addresses** (not UUIDs)
+- Owner can **change a collaborator's role** (viewer ↔ editor)
+- Owner can **remove a collaborator** to revoke access
+- Email resolution uses a `SECURITY DEFINER` RPC function joining `list_shares` with `auth.users` — no schema changes to `list_shares`
+
+### Implementation
+- New migration: `get_list_collaborators(p_list_id)` function returns shares enriched with email
+- `useListShares` hook calls the RPC instead of querying the table directly
+- `CollaboratorList` component displays email and meaningful avatar initials
+- Existing `useUpdateShareRole` and `useRemoveCollaborator` mutations remain unchanged
+
+**Validation:** Open share dialog → see collaborator emails → change role → remove collaborator → verify access revoked.
+
+---
+
 ## 12. Future Considerations
 
 ### Post-MVP Enhancements

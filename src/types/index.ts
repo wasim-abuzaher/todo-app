@@ -14,6 +14,7 @@ export type {
   TodoTag,
   ListShare,
   ListShareInsert,
+  ListShareWithEmail,
   ShareInvite,
   TodoWithRelations,
   TodoSearchResult,
