@@ -178,10 +178,11 @@ export type ListRole = "owner" | "editor" | "viewer";
 
 export function useListRole(list: TodoList | undefined): ListRole {
   const { user } = useAuth();
-  const { data: shares } = useListShares(list?.id ?? "");
+  const isOwner = !!list && !!user && list.owner_id === user.id;
+  const { data: shares } = useListShares(isOwner ? "" : (list?.id ?? ""));
 
   if (!list || !user) return "viewer";
-  if (list.owner_id === user.id) return "owner";
+  if (isOwner) return "owner";
 
   const share = shares?.find((s) => s.shared_with === user.id);
   if (share?.role === "editor") return "editor";

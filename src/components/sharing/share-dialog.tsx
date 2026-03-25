@@ -47,9 +47,13 @@ export function ShareDialog({ list, open, onOpenChange }: ShareDialogProps) {
 
   const copyToClipboard = async (token: string) => {
     const url = `${window.location.origin}/invite/${token}`;
-    await navigator.clipboard.writeText(url);
-    setCopied(token);
-    toast.success("Link copied to clipboard");
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(token);
+      toast.success("Link copied to clipboard");
+    } catch {
+      toast.error("Failed to copy link");
+    }
     setTimeout(() => setCopied(null), 2000);
   };
 

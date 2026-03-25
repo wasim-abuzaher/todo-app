@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useAuth } from "@/providers/auth-provider";
 import { useAcceptInvite } from "@/hooks/use-sharing";
@@ -11,19 +11,19 @@ export default function InvitePage() {
   const { user, loading: authLoading } = useAuth();
   const acceptInvite = useAcceptInvite();
   const navigate = useNavigate();
-  const [accepted, setAccepted] = useState(false);
+  const hasAccepted = useRef(false);
 
   // Auto-accept when user is authenticated
   useEffect(() => {
-    if (user && token && !accepted && !acceptInvite.isPending) {
-      setAccepted(true);
+    if (user && token && !hasAccepted.current) {
+      hasAccepted.current = true;
       acceptInvite.mutate(token, {
         onSuccess: (listId) => {
           navigate(`/lists/${listId}`, { replace: true });
         },
       });
     }
-  }, [user, token, accepted, acceptInvite, navigate]);
+  }, [user, token]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (authLoading) {
     return (

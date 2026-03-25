@@ -44,10 +44,11 @@ export function useSearch(query: string) {
       }
 
       // Fallback to ilike for short/partial queries
+      const escaped = trimmed.replace(/[%_,.*()]/g, "\\$&");
       const { data: fallback, error: fallbackError } = await supabase
         .from("todos")
         .select("*, todo_lists!inner(name)")
-        .or(`title.ilike.%${trimmed}%,description.ilike.%${trimmed}%`)
+        .or(`title.ilike.%${escaped}%,description.ilike.%${escaped}%`)
         .limit(20);
       if (fallbackError) throw fallbackError;
       return fallback as TodoSearchResult[];

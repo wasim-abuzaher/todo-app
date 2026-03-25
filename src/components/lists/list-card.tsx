@@ -12,6 +12,7 @@ export function ListCard({ list, todoCount }: ListCardProps) {
   return (
     <div className="group relative rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50">
       <Link to={`/lists/${list.id}`} className="absolute inset-0 z-0" aria-label={list.name} />
+      {/* Content is pointer-events-none so the underlying Link receives clicks; actions opt back in */}
       <div className="relative flex items-start justify-between pointer-events-none">
         <div className="flex items-start gap-3">
           <div className="mt-0.5 rounded-md bg-primary/10 p-2">
