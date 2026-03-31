@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { TodoForm, findSimilarTodos } from "../todo-form";
+import { TodoForm, findSimilarTodos, parseCountFromTitle } from "../todo-form";
 
 const mockMutateAsync = vi.fn();
 const mockTodos = [
@@ -98,6 +98,35 @@ describe("TodoForm", () => {
 
     expect(screen.queryByText(/similar todo/i)).not.toBeInTheDocument();
   });
+
+  it("shows count suggestion for '4 shirts'", async () => {
+    const user = userEvent.setup();
+    render(<TodoForm listId="list-1" />);
+
+    const input = screen.getByPlaceholderText("Add a todo...");
+    await user.type(input, "4 shirts");
+
+    const suggestion = screen.getByText(/with count/);
+    expect(suggestion).toBeInTheDocument();
+    expect(screen.getByText("shirts")).toBeInTheDocument();
+    expect(suggestion.textContent).toContain("×4");
+  });
+
+  it("creates todo with count when suggestion is clicked", async () => {
+    const user = userEvent.setup();
+    render(<TodoForm listId="list-1" />);
+
+    const input = screen.getByPlaceholderText("Add a todo...");
+    await user.type(input, "3x exercise");
+    await user.click(screen.getByText(/with count/));
+
+    expect(mockMutateAsync).toHaveBeenCalledWith({
+      list_id: "list-1",
+      title: "exercise",
+      count: 3,
+    });
+    expect(input).toHaveValue("");
+  });
 });
 
 describe("findSimilarTodos", () => {
@@ -135,5 +164,35 @@ describe("findSimilarTodos", () => {
     }));
     const result = findSimilarTodos("Task", manyTodos);
     expect(result).toHaveLength(5);
+  });
+});
+
+describe("parseCountFromTitle", () => {
+  it("parses '4 shirts'", () => {
+    expect(parseCountFromTitle("4 shirts")).toEqual({ count: 4, title: "shirts" });
+  });
+
+  it("parses '3x exercise'", () => {
+    expect(parseCountFromTitle("3x exercise")).toEqual({ count: 3, title: "exercise" });
+  });
+
+  it("parses '2 x push-ups'", () => {
+    expect(parseCountFromTitle("2 x push-ups")).toEqual({ count: 2, title: "push-ups" });
+  });
+
+  it("returns null for count of 1", () => {
+    expect(parseCountFromTitle("1 thing")).toBeNull();
+  });
+
+  it("returns null for no number prefix", () => {
+    expect(parseCountFromTitle("buy milk")).toBeNull();
+  });
+
+  it("returns null for number only", () => {
+    expect(parseCountFromTitle("42")).toBeNull();
+  });
+
+  it("returns null for count > 999", () => {
+    expect(parseCountFromTitle("1000 items")).toBeNull();
   });
 });

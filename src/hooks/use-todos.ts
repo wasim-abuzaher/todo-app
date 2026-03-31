@@ -26,7 +26,7 @@ export function useCreateTodo() {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (values: { list_id: string; title: string; position?: number }) => {
+    mutationFn: async (values: { list_id: string; title: string; position?: number; count?: number }) => {
       if (!user) throw new Error("User must be authenticated");
       const { data, error } = await supabase
         .from("todos")
