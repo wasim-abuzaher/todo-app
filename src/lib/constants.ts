@@ -6,6 +6,8 @@ export const PRIORITY = {
 
 export type Priority = keyof typeof PRIORITY;
 
+export const MAX_COUNT = 999;
+
 export const ROLES = {
   owner: "Owner",
   editor: "Editor",

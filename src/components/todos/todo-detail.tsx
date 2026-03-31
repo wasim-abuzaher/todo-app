@@ -21,7 +21,7 @@ import { useUpdateTodo, useDeleteTodo } from "@/hooks/use-todos";
 import { DueDatePicker } from "./due-date-picker";
 import { SubtaskList } from "@/components/subtasks/subtask-list";
 import { TagPicker } from "@/components/tags/tag-picker";
-import { PRIORITY } from "@/lib/constants";
+import { MAX_COUNT, PRIORITY } from "@/lib/constants";
 import { Loader2, Minus, Plus, Trash2 } from "lucide-react";
 import type { Todo } from "@/types";
 
@@ -38,7 +38,7 @@ export function TodoDetail({ todo, open, onOpenChange, canEdit = true }: TodoDet
   const [priority, setPriority] = useState<string>("medium");
   const [dueDate, setDueDate] = useState<string | null>(null);
   const [count, setCount] = useState(1);
-  const MAX_COUNT = 999;
+  // MAX_COUNT imported from @/lib/constants
   const updateTodo = useUpdateTodo();
   const deleteTodo = useDeleteTodo();
 
